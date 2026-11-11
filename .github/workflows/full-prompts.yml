@@ -1,0 +1,25 @@
+name: Warehouse full prompts
+on:
+  pull_request:
+    paths:
+      - 'engine/**'
+      - 'preview/**'
+      - 'scripts/**'
+      - '.github/workflows/full-prompts.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  prompt-and-gameplay:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/build-preview.mjs
+      - run: node --check dist-preview/engine/warehouse.js
+      - run: npm install --no-save --no-package-lock playwright@1.56.1
+      - run: npx playwright install chromium
+      - run: node scripts/test-preview.mjs
