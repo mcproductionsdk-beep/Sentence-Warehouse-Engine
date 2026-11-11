@@ -6,6 +6,15 @@ for(const [name,options] of [['desktop',{viewport:{width:1280,height:800}}],['po
  const ctx=await browser.newContext(options),errors=[],external=[];await ctx.route('**/*',r=>{if(new URL(r.request().url()).origin===origin)return r.continue();external.push(r.request().url());return r.abort()});const p=await ctx.newPage();p.on('pageerror',e=>errors.push(e.message));await p.addInitScript(()=>{window.spoken=[];window.speechSynthesis.speak=u=>{spoken.push(u.text);queueMicrotask(()=>u.onend?.())}});await p.goto(origin);await p.getByRole('button',{name:'Play sample',exact:true}).click();
  assert.deepEqual(await p.locator('.gamebar button').allTextContents(),['PAUSE','RESTART','MAIN MENU','SOUND ON']);assert.equal(await p.evaluate(()=>document.documentElement.scrollHeight<=innerHeight&&document.documentElement.scrollWidth<=innerWidth),true);
  assert.ok(await p.locator('.gamebar button').evaluateAll(bs=>{const r=bs.map(b=>b.getBoundingClientRect());return r.every(b=>b.height>=44&&b.top===r[0].top&&b.left>=0&&b.right<=innerWidth)}));
+ if(name!=='desktop'){
+ assert.equal(await p.locator('#gestureGuide').isVisible(),true);
+ assert.equal(await p.locator('[data-key]').count(),0);
+ await p.evaluate(()=>{const w=state.words.find(w=>!w.done);Object.assign(state.player,floorPoint(w.x+44,w.y+21))});
+ await p.locator('#gestureGuide').tap();assert.ok(await p.evaluate(()=>!!state.player.carrying));
+ await p.evaluate(()=>{state.player.x=belt.left+78;state.player.y=belt.top+76});
+ await p.locator('#gestureGuide').tap();assert.equal(await p.evaluate(()=>state.player.carrying),null);
+ await p.getByRole('button',{name:'RESTART',exact:true}).click();
+ }
  await p.keyboard.down('ArrowRight');await p.waitForTimeout(160);await p.keyboard.up('ArrowRight');assert.ok(await p.evaluate(()=>state.player.x>(mobilePortrait?300:500)));
  await p.getByRole('button',{name:'PAUSE',exact:true}).click();const x=await p.evaluate(()=>state.player.x);await p.keyboard.down('ArrowRight');await p.waitForTimeout(140);await p.keyboard.up('ArrowRight');assert.equal(await p.evaluate(()=>state.player.x),x);await p.locator('.gamebar').getByRole('button',{name:'RESUME',exact:true}).click();
  const deliver=async(text,slot,decoy=false)=>p.evaluate(([text,slot,decoy])=>{const w=state.words.find(w=>!w.done&&w.text===text&&w.decoy===decoy);state.player.x=w.x+51;state.player.y=w.y+23;action();const b=state.slots[slot];state.player.x=b.x+b.w/2;state.player.y=b.y+(state.slotShift||0)+85;action()},[text,slot,decoy]);
