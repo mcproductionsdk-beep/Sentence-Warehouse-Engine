@@ -16,6 +16,9 @@ for(const [name,options] of [['desktop',{viewport:{width:1280,height:800}}],['po
  // Boundaries: retain every valid pair; reject incompatible rows before a run.
  assert.deepEqual(await p.evaluate(()=>[0,19,20,21].map(n=>compatibility([['Prompt',Array(n).fill('gato').join(' ')]]).length)),[1,0,0,1]);
  await p.evaluate(()=>start([['Twenty words',Array(20).fill('gato').join(' ')],['Other','Otro gato']], 'es-ES'));assert.equal(await p.evaluate(()=>state.words.length),20);assert.equal(await p.evaluate(()=>new Set(state.words.map(w=>w.x+','+w.y)).size),20);
+ assert.equal(await p.evaluate(()=>{for(let i=0;i<250;i++){advanceConveyor(80);const crates=state.words;for(let a=0;a<crates.length;a++)for(let b=a+1;b<crates.length;b++){const x=crates[a],y=crates[b];if(Math.abs(x.x-y.x)<88&&Math.abs(x.y-y.y)<42)return false}}return true}),true);
+ const lap=await p.evaluate(()=>{const p=beltPoint(0),q=beltPoint(beltLength);return Math.hypot(p.x-q.x,p.y-q.y)});assert.ok(lap<.01);
+ await p.evaluate(()=>{keys.add('arrowleft');keys.add('arrowup')});await p.waitForTimeout(200);await p.evaluate(()=>keys.clear());assert.equal(await p.evaluate(()=>state.player.x>=belt.left+78&&state.player.y>=belt.top+76),true);
  await p.evaluate(()=>start([['Repeated','gato gato'],['Other','otro perro']], 'es-ES'));await deliver('gato',1);await deliver('gato',0);await p.getByText('SENTENCE COMPLETE!',{exact:true}).waitFor();await p.getByRole('button',{name:'RESTART',exact:true}).click();await p.waitForTimeout(500);assert.equal(await p.evaluate(()=>state.idx),0);
  await p.getByRole('button',{name:'SOUND ON',exact:true}).click();assert.equal(await p.locator('#sound').getAttribute('aria-pressed'),'false');await p.getByRole('button',{name:'MAIN MENU',exact:true}).click();assert.equal(await p.getByRole('button',{name:'Play sample',exact:true}).isVisible(),true);assert.deepEqual(errors,[]);assert.deepEqual(external,[]);await ctx.close();console.log(name+' passed');
 }
