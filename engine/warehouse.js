@@ -198,7 +198,7 @@ if(window.parent!==window){
      cancel(){settle();send('CANCEL')},sound(soundOn){if(!soundOn)settle();send('SOUND',{soundOn})},menu(){settle();send('MENU')}
     };
     sound=d.soundOn;E('sound').textContent=sound?'SOUND ON':'SOUND OFF';E('sound').setAttribute('aria-pressed',String(sound));
-    start(pairs,language);E('pause').focus();send('STARTED');
+    start(pairs,language);send('STARTED');
    }else if(sessionId&&d.sessionId===sessionId&&d.type==='SPOKEN'&&d.id===pending?.id)settle();
   }
   window.addEventListener('message',receive);
