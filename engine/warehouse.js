@@ -31,7 +31,7 @@ function placeConveyorWords(s){
 function advanceConveyor(dt){state.beltOffset=(state.beltOffset+28*dt/1000)%beltLength;placeConveyorWords(state)}
 function spawn(n){return Array.from({length:n},(_,i)=>{const p=beltPoint(i*beltLength/n);return {x:p.x-44,y:p.y-21}})}
 function floorPoint(x,y){return {x:Math.max(belt.left+78,Math.min(belt.right-78,x)),y:Math.max(belt.top+76,Math.min(belt.bottom-64,y))}}
-function start(pairs,lang){const issues=compatibility(pairs);if(issues.length){E('error').textContent=issues.map(x=>'Row '+x.row+': '+x.reason+' ('+x.count+').').join(' ');return false}E('error').textContent='';stop();E('pause').textContent='PAUSE';source={pairs:pairs.map(x=>[...x]),lang};state={pairs:source.pairs,lang,idx:0,mistakes:0,elapsed:0,player:{x:mobilePortrait?300:500,y:mobilePortrait?650:520,walking:false,step:0,facing:'up',carrying:null},mode:'running',words:[],slots:[],filled:[],prompt:'',target:''};E('menu').hidden=true;E('game').hidden=false;E('overlay').hidden=true;nextSentence();last=performance.now();raf=requestAnimationFrame(tick)}function nextSentence(){const s=state;if(s.idx>=s.pairs.length){finish();return}const [en,target]=s.pairs[s.idx];const words=wordsOf(target);s.prompt=en;s.target=target;s.slots=layout(words.length);s.filled=words.map(()=>false);const extras=distractorsFor(s,words);const crates=shuffle(words.map((text,i)=>({id:i,text,decoy:false,done:false})).concat(extras.map((text,i)=>({id:words.length+i,text,decoy:true,done:false}))));s.beltOffset=0;const places=spawn(crates.length);s.words=crates.map((w,i)=>({...w,x:places[i]?.x??55+(i%7)*142,y:places[i]?.y??186}));s.player.x=mobilePortrait?300:500;s.player.y=mobilePortrait?650:510;s.player.carrying=null;E('notice').textContent='Collect the words you need. Extra crates are distractions! Press SPACE to deliver.';render()}
+function start(pairs,lang){const issues=compatibility(pairs);if(issues.length){E('error').textContent=issues.map(x=>'Row '+x.row+': '+x.reason+' ('+x.count+').').join(' ');return false}E('error').textContent='';stop();E('pause').textContent='PAUSE';source={pairs:pairs.map(x=>[...x]),lang};state={pairs:source.pairs,lang,idx:0,mistakes:0,elapsed:0,player:{x:mobilePortrait?300:500,y:mobilePortrait?650:520,walking:false,step:0,facing:'up',carrying:null},mode:'running',words:[],slots:[],filled:[],prompt:'',target:''};E('menu').hidden=true;E('game').hidden=false;E('overlay').hidden=true;nextSentence();last=performance.now();raf=requestAnimationFrame(tick)}function nextSentence(){const s=state;if(s.idx>=s.pairs.length){finish();return}const [en,target]=s.pairs[s.idx];const words=wordsOf(target);s.prompt=en;s.target=target;s.slots=layout(words.length);s.filled=words.map(()=>false);const extras=distractorsFor(s,words);const crates=shuffle(words.map((text,i)=>({id:i,text,decoy:false,done:false})).concat(extras.map((text,i)=>({id:words.length+i,text,decoy:true,done:false}))));s.beltOffset=0;const places=spawn(crates.length);s.words=crates.map((w,i)=>({...w,x:places[i]?.x??55+(i%7)*142,y:places[i]?.y??186}));s.player.x=mobilePortrait?300:500;s.player.y=mobilePortrait?650:510;s.player.carrying=null;E('notice').textContent='';render()}
 // Target-language distractors: prefer words from other sentences in the selected set,
 // then supplement with a small locale-specific bank. Never use English prompt words.
 const DISTRACTOR_BANK={
@@ -163,16 +163,7 @@ if(matchMedia('(pointer:coarse)').matches){for(const canvas of [E('canvas'),E('g
 canvas.addEventListener('pointerdown',e=>{if(E('game').hidden||state?.mode!=='running')return;e.preventDefault();canvas.setPointerCapture(e.pointerId);const p=mobilePoint(e);Object.assign(mobileTouch,{active:true,x:p.x,y:p.y,originX:p.x,originY:p.y});},{passive:false});
 canvas.addEventListener('pointermove',e=>{if(!mobileTouch.active)return;e.preventDefault();const p=mobilePoint(e);mobileTouch.x=p.x;mobileTouch.y=p.y;const dx=p.x-mobileTouch.originX,dy=p.y-mobileTouch.originY;clearMobileTouchKeys();if(Math.hypot(dx,dy)>14){if(Math.abs(dx)>9)keys.add(dx>0?'arrowright':'arrowleft');if(Math.abs(dy)>9)keys.add(dy>0?'arrowdown':'arrowup')}},{passive:false});
 canvas.addEventListener('pointerup',e=>{if(!mobileTouch.active)return;const p=mobilePoint(e),travel=Math.hypot(p.x-mobileTouch.originX,p.y-mobileTouch.originY);clearMobileTouch();if(travel<20&&state?.mode==='running'){
- if(canvas.id==='gestureGuide'){action();render();return}
- const game=state,player=game.player;
- if(!player.carrying){
-  const crate=game.words.find(w=>!w.done&&p.x>=w.x-8&&p.x<=w.x+96&&p.y>=w.y-8&&p.y<=w.y+50);
-  if(crate){Object.assign(player,floorPoint(crate.x+44,crate.y+21));player.carrying=crate;speak(crate.text);E('notice').textContent='Carrying '+crate.text+' — tap a numbered blank to deliver.';render();return}
- }else{
-  const index=game.slots.findIndex((b,i)=>!game.filled[i]&&p.x>=b.x-12&&p.x<=b.x+b.w+12&&p.y>=b.y-12&&p.y<=b.y+b.h+12);
-  if(index>=0){const slot=game.slots[index];Object.assign(player,floorPoint(slot.x+slot.w/2,slot.y+slot.h/2+85));action();return}
- }
- E('notice').textContent=player.carrying?'Tap a numbered blank to place your word.':'Tap a word crate to pick it up.';
+ action();render();
 }},{passive:false});
 for(const ev of ['pointercancel','lostpointercapture'])canvas.addEventListener(ev,clearMobileTouch);
 }}
