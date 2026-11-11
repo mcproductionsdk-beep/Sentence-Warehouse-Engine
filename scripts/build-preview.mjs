@@ -4,6 +4,7 @@ import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 const root = new URL('../', import.meta.url);
 const output = new URL('dist-preview/', root);
 const files = [
+  ['engine/lifecycle.js', 'engine/lifecycle.js'],
   ['preview/index.html', 'index.html'],
   ['engine/warehouse.js', 'engine/warehouse.js'],
   ['engine/warehouse.css', 'engine/warehouse.css'],
@@ -16,6 +17,10 @@ const headers = `/*
   X-Robots-Tag: noindex, nofollow
   Cache-Control: no-store
 `;
+
+// Versioned adapter utility copied from Educational-Games at 326eae1c636b15a7e79690b0f150f3680003b3ba.
+const lifecycleDigest = createHash('sha256').update(await readFile(new URL('engine/lifecycle.js',root))).digest('hex');
+if(lifecycleDigest !== '39be3509960c6c5132d8074a4fe65ac663175e546cffab2f7562ba620cc1b777')throw Error('Unreviewed Sentence lifecycle utility');
 
 const assets = await Promise.all(files.map(async ([source, destination]) => [
   destination, await readFile(new URL(source, root)),
