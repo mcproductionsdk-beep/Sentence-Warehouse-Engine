@@ -29,12 +29,13 @@ try{
   await page.locator('#pause').click();assert.equal(await page.evaluate(()=>lifecycleFixture.life.paused),true);
   const frozen=await page.evaluate(()=>lifecycleFixture.snapshot());await page.waitForTimeout(250);
   assert.deepEqual(await page.evaluate(()=>lifecycleFixture.snapshot()),frozen,'simulation frozen');
-  const other=await ctx.newPage();await other.bringToFront();await page.bringToFront();await other.close();
+  await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
   assert.equal(await page.evaluate(()=>lifecycleFixture.life.paused),true,'focus does not resume');
   await page.locator('#pause').click();assert.equal(await page.evaluate(()=>lifecycleFixture.life.paused),false);
-  // Actual browser focus loss pauses; no dispatch-only substitute.
-  const background=await ctx.newPage();await background.bringToFront();
-  await page.waitForFunction(()=>lifecycleFixture.life.paused);await page.bringToFront();await background.close();
+  // Control visibility explicitly: headless browser tabs may all remain visible.
+  await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'))});
+  await page.waitForFunction(()=>lifecycleFixture.life.paused);
+  await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>false});document.dispatchEvent(new Event('visibilitychange'));window.dispatchEvent(new Event('focus'))});
   assert.equal(await page.evaluate(()=>lifecycleFixture.life.paused),true);
   await page.locator('#restart').click();assert.equal(await page.evaluate(()=>lifecycleFixture.life.paused),false);
   // Completion speech is deliberately left pending, as on a slow device.
