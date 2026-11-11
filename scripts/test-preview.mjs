@@ -4,6 +4,7 @@ const server=createServer(async(req,res)=>{const f=files[new URL(req.url,'http:/
 try{await new Promise(r=>server.listen(0,'127.0.0.1',r));const origin='http://127.0.0.1:'+server.address().port;
 for(const [name,options] of [['desktop',{viewport:{width:1280,height:800}}],['portrait',devices['Pixel 7']],['landscape',{...devices['Pixel 7'],viewport:{width:844,height:390}}]]){
  const ctx=await browser.newContext(options),errors=[],external=[];await ctx.route('**/*',r=>{if(new URL(r.request().url()).origin===origin)return r.continue();external.push(r.request().url());return r.abort()});const p=await ctx.newPage();p.on('pageerror',e=>errors.push(e.message));await p.addInitScript(()=>{window.spoken=[];window.speechSynthesis.speak=u=>{spoken.push(u.text);queueMicrotask(()=>u.onend?.())}});await p.goto(origin);await p.getByRole('button',{name:'Play sample',exact:true}).click();
+ assert.equal(await p.locator('#notice').evaluate(e=>getComputedStyle(e).position),'absolute');
  assert.deepEqual(await p.locator('.gamebar button').allTextContents(),['PAUSE','RESTART','MAIN MENU','SOUND ON']);assert.equal(await p.evaluate(()=>document.documentElement.scrollHeight<=innerHeight&&document.documentElement.scrollWidth<=innerWidth),true);
  assert.ok(await p.locator('.gamebar button').evaluateAll(bs=>{const r=bs.map(b=>b.getBoundingClientRect());return r.every(b=>b.height>=44&&b.top===r[0].top&&b.left>=0&&b.right<=innerWidth)}));
  if(name!=='desktop'){
@@ -13,6 +14,13 @@ for(const [name,options] of [['desktop',{viewport:{width:1280,height:800}}],['po
  await p.locator('#gestureGuide').tap();assert.ok(await p.evaluate(()=>!!state.player.carrying));
  await p.evaluate(()=>{state.player.x=belt.left+78;state.player.y=belt.top+76});
  await p.locator('#gestureGuide').tap();assert.equal(await p.evaluate(()=>state.player.carrying),null);
+ // A tap on empty canvas space uses the worker's reach, not the tap coordinates.
+ await p.evaluate(()=>{const w=state.words.find(w=>!w.done&&!w.decoy);Object.assign(state.player,floorPoint(w.x+44,w.y+21))});
+ await p.locator('#canvas').tap({position:{x:10,y:10}});
+ assert.ok(await p.evaluate(()=>!!state.player.carrying));
+ await p.evaluate(()=>{state.player.x=belt.left+78;state.player.y=belt.top+76});
+ await p.locator('#canvas').tap({position:{x:10,y:10}});
+ assert.equal(await p.evaluate(()=>state.player.carrying),null);
  await p.getByRole('button',{name:'RESTART',exact:true}).click();
  }
  await p.keyboard.down('ArrowRight');await p.waitForTimeout(160);await p.keyboard.up('ArrowRight');assert.ok(await p.evaluate(()=>state.player.x>(mobilePortrait?300:500)));
