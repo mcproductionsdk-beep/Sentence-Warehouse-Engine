@@ -18,9 +18,9 @@ const headers = `/*
   Cache-Control: no-store
 `;
 
-// Versioned adapter utility copied from Educational-Games at 90028503b4547ff9396369f138eded70debd137e.
+// Versioned adapter utility copied from Educational-Games at 5c0893311e1c1b6e76719bbe99085beac81819cf.
 const lifecycleDigest = createHash('sha256').update(await readFile(new URL('engine/lifecycle.js',root))).digest('hex');
-if(lifecycleDigest !== '9221760cdec8bccdaa4662f70102d048d74164b172ee3723183e187f788a12cb')throw Error('Unreviewed Sentence lifecycle utility');
+if(lifecycleDigest !== '9faee93474399e685fd122530daa7103b4f596a36b1ffc877aa65ae95a1f33f8')throw Error('Unreviewed Sentence lifecycle utility');
 
 const assets = await Promise.all(files.map(async ([source, destination]) => [
   destination, await readFile(new URL(source, root)),

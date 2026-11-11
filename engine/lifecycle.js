@@ -51,7 +51,8 @@ globalThis.BTSentenceLifecycle = Object.freeze({
     }catch{finish()}
    });
   }
-  window.addEventListener('blur',()=>{setTimeout(()=>{if(document.hidden||!document.hasFocus())pause()},0)});
+  // The launcher owns embedded focus loss; iframe focus handoffs also emit blur.
+  window.addEventListener('blur',()=>{if(window.parent!==window)return;setTimeout(()=>{if(document.hidden||!document.hasFocus())pause()},0)});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)pause()});
   window.addEventListener('pagehide',stop);
   return Object.freeze({begin,stop,pause,resume,toggle(){paused?resume():pause()},after,clearTimers,checkpoint,cancelSpeech,speak,tasks,
