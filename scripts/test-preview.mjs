@@ -54,6 +54,9 @@ for(const [name,options] of [['desktop',{viewport:{width:1280,height:800}}],['po
  const beforeRead=await p.evaluate(()=>[state.player.x,state.player.y]);
  await p.locator('.sentence-context').press('ArrowDown');
  assert.deepEqual(await p.evaluate(()=>[state.player.x,state.player.y]),beforeRead);
+ await p.locator('#canvas').focus();
+ await p.keyboard.down('ArrowRight');await p.waitForTimeout(100);await p.keyboard.up('ArrowRight');
+ assert.ok(await p.evaluate(()=>state.player.x)>beforeRead[0]);
  await p.getByRole('button',{name:'RESTART',exact:true}).click();
  assert.equal(await p.locator('#prompt').textContent(),maximumPrompt);
  // Boundaries: retain every valid pair; reject incompatible rows before a run.
