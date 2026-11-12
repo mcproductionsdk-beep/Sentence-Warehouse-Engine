@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';import {createServer} from 'node:http';import {chromium,devices} from 'playwright';
-const root=new URL('../dist-preview/',import.meta.url),headers=await readFile(new URL('_headers',root),'utf8'),csp=headers.match(/Content-Security-Policy: (.+)/)[1];const files={'/':['index.html','text/html'],'/engine/warehouse.js':['engine/warehouse.js','text/javascript'],'/engine/warehouse.css':['engine/warehouse.css','text/css']};
+const root=new URL('../dist-preview/',import.meta.url),headers=await readFile(new URL('_headers',root),'utf8'),csp=headers.match(/Content-Security-Policy: (.+)/)[1];const files={'/engine/lifecycle.js':['engine/lifecycle.js','text/javascript'],'/':['index.html','text/html'],'/engine/warehouse.js':['engine/warehouse.js','text/javascript'],'/engine/warehouse.css':['engine/warehouse.css','text/css']};
 const server=createServer(async(req,res)=>{const f=files[new URL(req.url,'http://localhost').pathname];if(!f)return res.writeHead(404).end();res.writeHead(200,{'Content-Type':f[1],'Content-Security-Policy':csp});res.end(await readFile(new URL(f[0],root)))});const browser=await chromium.launch();
 try{await new Promise(r=>server.listen(0,'127.0.0.1',r));const origin='http://127.0.0.1:'+server.address().port;
 for(const [name,options] of [['desktop',{viewport:{width:1280,height:800}}],['portrait',devices['Pixel 7']],['narrow portrait',{...devices['Pixel 7'],viewport:{width:360,height:740}}],['landscape',{...devices['Pixel 7'],viewport:{width:844,height:390}}]]){
@@ -51,6 +51,7 @@ for(const [name,options] of [['desktop',{viewport:{width:1280,height:800}}],['po
  assert.equal(await p.locator('.sentence-context img').count(),0);
  assert.ok(await p.locator('.sentence-context').evaluate(e=>e.scrollWidth<=e.clientWidth+1));
  assert.equal(await p.evaluate(()=>document.documentElement.scrollHeight<=innerHeight&&document.documentElement.scrollWidth<=innerWidth),true);
+ await p.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
  const beforeRead=await p.evaluate(()=>[state.player.x,state.player.y]);
  await p.locator('.sentence-context').press('ArrowDown');
  assert.deepEqual(await p.evaluate(()=>[state.player.x,state.player.y]),beforeRead);
