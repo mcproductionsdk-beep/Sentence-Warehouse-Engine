@@ -1,5 +1,6 @@
 name: Sentence lifecycle regression
 on:
+  workflow_dispatch:
   pull_request:
     paths: ['engine/**', 'preview/**', 'scripts/**', '.github/workflows/sentence-lifecycle.yml']
 permissions:
