@@ -51,6 +51,7 @@ for(const [name,options] of [['desktop',{viewport:{width:1280,height:800}}],['po
  assert.equal(await p.locator('.sentence-context img').count(),0);
  assert.ok(await p.locator('.sentence-context').evaluate(e=>e.scrollWidth<=e.clientWidth+1));
  assert.equal(await p.evaluate(()=>document.documentElement.scrollHeight<=innerHeight&&document.documentElement.scrollWidth<=innerWidth),true);
+ await p.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
  const beforeRead=await p.evaluate(()=>[state.player.x,state.player.y]);
  await p.locator('.sentence-context').press('ArrowDown');
  assert.deepEqual(await p.evaluate(()=>[state.player.x,state.player.y]),beforeRead);
